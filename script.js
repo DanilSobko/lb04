@@ -8,13 +8,25 @@ const errorText = document.getElementById('error');
 
 let allMovies = [];
 
-// Завантаження фільмів з API
-async function fetchMovies() {
+// Завантаження всіх фільмів з API з урахуванням пагінації
+async function fetchAllMovies() {
+  let page = 0;
+  let movies = [];
+
   try {
-    const response = await fetch(API_URL);
-    if (!response.ok) throw new Error('Помилка при завантаженні даних...');
-    const data = await response.json();
-    allMovies = data;
+    while (true) {
+      const response = await fetch(`${API_URL}?page=${page}`);
+      if (!response.ok) {
+        if (response.status === 404) break; // Кінець списку
+        throw new Error('Помилка при завантаженні даних...');
+      }
+      const data = await response.json();
+      if (data.length === 0) break;
+      movies = movies.concat(data);
+      page++;
+    }
+
+    allMovies = movies;
     renderMovies(allMovies);
   } catch (error) {
     errorText.textContent = error.message;
@@ -74,4 +86,4 @@ sortSelect.addEventListener('change', () => {
 });
 
 // Початковий запуск
-fetchMovies();
+fetchAllMovies();
